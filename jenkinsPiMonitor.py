@@ -103,7 +103,7 @@ def get_overall_state(jobs):
     global server
     try:
     	if server is None:
-            log ("server undefined reconnecting")
+            log ("server undefined. reconnecting")
     	    server = Jenkins(viewURL,username,password)
 
         running = False
@@ -160,6 +160,7 @@ def checkJobs():
         if server is None:
             try:
                 server = Jenkins(viewURL,username,password)
+                log ( "reconnected." )
             except:
                 log ("failed to reconnect")
                 msleep(5000)
