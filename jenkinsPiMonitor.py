@@ -68,7 +68,7 @@ def screenupdate():
                 colourtouse[colour] = max(int(round(colourtouse[colour] * brightness)),int (round(min_brightness*255)))
         #print "setting colour:", colourtouse, "from state", overall_state
         sense.clear(colourtouse)
-        msleep(2)
+        msleep(50)
 
 
 def get_current_state(job):
@@ -102,6 +102,8 @@ def get_current_state(job):
 def get_overall_state(jobs):
     global server
     try:
+
+        log ("Getting current State.")
     	if server is None:
             log ("server undefined. reconnecting")
     	    server = Jenkins(viewURL,username,password)
@@ -109,6 +111,8 @@ def get_overall_state(jobs):
         running = False
         current_state = State.disabled
         for job in jobs:
+            log("checking job")
+            log(job[0])
             jobinstance = server.get_job(job[0])
             if(jobinstance.is_running()):
                 running = True
@@ -157,17 +161,20 @@ def checkJobs():
     global server
     jobs = server.get_jobs()
     while True:
-        if server is None:
-            try:
-                server = Jenkins(viewURL,username,password)
-                log ( "reconnected." )
-            except:
-                log ("failed to reconnect")
-                msleep(5000)
-        if server != None:
-            jobs = server.get_jobs()
-            overall_state = get_overall_state(jobs)
-            #log ("state:" + overall_state)
+        try:
+            if server is None:
+                try:
+                    server = Jenkins(viewURL,username,password)
+                    log ( "reconnected." )
+                except:
+                    log ("failed to reconnect")
+                    msleep(5000)
+            if server != None:
+                jobs = server.get_jobs()
+                overall_state = get_overall_state(jobs)
+                #log ("state:" + overall_state)
+        except:
+            log("failed somewhere... going to loop again anyway.")
 
 def processConfig(filePath):
 
