@@ -135,10 +135,12 @@ def joystickupdate():
 def checkJobs():
     global overall_state
     while True:
-        resp = requests.get(viewURL+ "/api/json")
-        if resp.status_code == 200:
-            overall_state = get_overall_state(resp.json()['jobs'])
-
+        try:
+            resp = requests.get(viewURL+ "/api/json")
+            if resp.status_code == 200:
+                overall_state = get_overall_state(resp.json()['jobs'])
+        except ConnectionError:
+            log("connection error")
         msleep(5000)
 
 def processConfig(filePath):
