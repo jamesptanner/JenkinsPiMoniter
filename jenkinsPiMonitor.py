@@ -88,6 +88,7 @@ def get_overall_state(jobs):
     global server
     log ("Getting current State.")
     running = False
+    current_state = State.disabled
     for job in jobs:
         log("checking job: " + job['name'])
         log("   state:" + job['color'])
@@ -134,9 +135,11 @@ def joystickupdate():
 def checkJobs():
     global overall_state
     while True:
-        resp = request.get(viewURL+ "/api/json")
-        if resp.status_code == 200
+        resp = requests.get(viewURL+ "/api/json")
+        if resp.status_code == 200:
             overall_state = get_overall_state(resp.json()['jobs'])
+
+        msleep(5000)
 
 def processConfig(filePath):
 
