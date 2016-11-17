@@ -11,6 +11,8 @@ import datetime
 import getopt
 import ConfigParser
 
+import requests
+
 sense = SenseHat()
 sense.clear([0,0,0])
 
@@ -72,59 +74,30 @@ def screenupdate():
 
 
 def get_current_state(job):
-    if (not job.is_enabled()):
+    if (job.startswith("notbuilt")):
         return State.disabled
-    try:
-        lastcompletedbuildnum = job.get_last_completed_buildnumber()
-    except NoBuildData:
-        log ("NoBuildData:complete")
-        return State.disabled
-    try:
-        if(lastcompletedbuildnum == job.get_last_stable_buildnumber()):
-            return State.stable
-    except NoBuildData:
-        log ("NoBuildData:stable")
-        pass
-    try:
-        if(lastcompletedbuildnum == job.get_last_failed_buildnumber()):
-            return State.failed
-    except NoBuildData:
-        log ("NoBuildData:failed")
-        pass
-    try:
-        if(lastcompletedbuildnum == job.get_last_good_buildnumber()):
-            return State.unstable
-    except NoBuildData:
-        log ("NoBuildDatar:unstable")
-        pass
-    return 2
+    if(job.startswith("blue")):
+        return State.stable
+    if(job.startswith("red")):
+        return State.failed
+    if(job.startswith("yellow")):
+        return State.unstable
+    return State.disabled
 
 def get_overall_state(jobs):
     global server
-    try:
+    log ("Getting current State.")
+    running = False
+    for job in jobs:
+        log("checking job: " + job['name'])
+        log("   state:" + job['color'])
 
-        log ("Getting current State.")
-    	if server is None:
-            log ("server undefined. reconnecting")
-    	    server = Jenkins(viewURL,username,password)
+        running = running | job['color'].endswith("_anime")
+        jobstate = get_current_state(job['color'])
+        if current_state < jobstate:
+            current_state = jobstate
 
-        running = False
-        current_state = State.disabled
-        for job in jobs:
-            log("checking job")
-            log(job[0])
-            jobinstance = server.get_job(job[0])
-            if(jobinstance.is_running()):
-                running = True
-            jobstate = get_current_state(jobinstance)
-            if current_state < jobstate:
-                current_state = jobstate
-        return running + current_state
-
-    except:
-        server = None
-        log("Connection Error.")
-    return overall_state
+    return running + current_state
 
 def handle_code(code):
     global brightness
@@ -156,25 +129,14 @@ def joystickupdate():
         if event.type == ecodes.EV_KEY:
             if event.value == 0:  # key up
                 handle_code(event.code)
+
+
 def checkJobs():
     global overall_state
-    global server
-    jobs = server.get_jobs()
     while True:
-        try:
-            if server is None:
-                try:
-                    server = Jenkins(viewURL,username,password)
-                    log ( "reconnected." )
-                except:
-                    log ("failed to reconnect")
-                    msleep(5000)
-            if server != None:
-                jobs = server.get_jobs()
-                overall_state = get_overall_state(jobs)
-                #log ("state:" + overall_state)
-        except:
-            log("failed somewhere... going to loop again anyway.")
+        resp = request.get(viewURL+ "/api/json")
+        if resp.status_code == 200
+            overall_state = get_overall_state(resp.json()['jobs'])
 
 def processConfig(filePath):
 
