@@ -1,5 +1,3 @@
-from jenkinsapi.jenkins import Jenkins
-from jenkinsapi.custom_exceptions import NoBuildData
 from sense_hat import SenseHat
 from evdev import InputDevice, list_devices, ecodes
 
@@ -182,8 +180,6 @@ def main(argv):
         elif opt in ("-h","--host"):
             viewURL = arg
 
-    global server
-    server = Jenkins(viewURL,username,password)
     try:
         screenthread = threading.Thread(target=screenupdate)
         screenthread.start()
