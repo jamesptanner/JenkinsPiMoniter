@@ -15,8 +15,6 @@ sense = SenseHat()
 sense.clear([0,0,0])
 
 viewURL = ""
-username = ""
-password = ""
 
 msleep = lambda x: time.sleep(x / 1000.0)
 
@@ -83,13 +81,12 @@ def get_current_state(job):
     return State.disabled
 
 def get_overall_state(jobs):
-    global server
     log ("Getting current State.")
     running = False
     current_state = State.disabled
     for job in jobs:
         log("checking job: " + job['name'])
-        log("   state:" + job['color'])
+        log("           state:" + job['color'])
 
         running = running | job['color'].endswith("_anime")
         jobstate = get_current_state(job['color'])
@@ -137,31 +134,23 @@ def checkJobs():
             resp = requests.get(viewURL+ "/api/json")
             if resp.status_code == 200:
                 overall_state = get_overall_state(resp.json()['jobs'])
-        except ConnectionError:
+        except requests.ConnectionError:
             log("connection error")
         msleep(5000)
 
 def processConfig(filePath):
 
-    global username
-    global password
     global viewURL
 
     config = ConfigParser.SafeConfigParser()
     config.read(filePath)
-    username = config.get("authentication","user")
-    password = config.get("authentication","password")
     viewURL = config.get("authentication","view")
-    print "username:",username
-    print "password:",password
     print "url:",viewURL
 
 def main(argv):
-    global username
-    global password
     global viewURL
     try:
-        opts, args = getopt.getopt(argv,"u:p:c:h:",["config=","user=","password=","host="])
+        opts, args = getopt.getopt(argv,"c:h:",["config=","host="])
     except getopt.GetoptError:
         sys.exit(2)
 
@@ -173,10 +162,6 @@ def main(argv):
             print "have config file"
             processConfig(arg)
             break
-        elif opt in ("-u","--user"):
-            username = arg
-        elif opt in ("-p","--password"):
-            password = arg
         elif opt in ("-h","--host"):
             viewURL = arg
 
